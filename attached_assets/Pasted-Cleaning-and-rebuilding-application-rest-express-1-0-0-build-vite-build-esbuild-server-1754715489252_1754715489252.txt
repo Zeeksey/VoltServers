@@ -1,0 +1,155 @@
+Cleaning and rebuilding application...
+
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+sh: 1: vite: not found
+Building backend server...
+✘ [ERROR] Could not resolve "vite"
+
+    server/vite.ts:4:63:
+      4 │ import { createServer as createViteServer, createLogger } from "vite";
+        │                                                                ~~~~~~
+        ╵                                                                "./vite"
+
+  Use the relative path "./vite" to reference the file "server/vite.ts". Without the leading "./",
+  the path "vite" is being interpreted as a package path instead.
+
+✘ [ERROR] Could not resolve "vite"
+
+    vite.config.ts:1:29:
+      1 │ import { defineConfig } from "vite";
+        ╵                              ~~~~~~
+
+  You can mark the path "vite" as external to exclude it from the bundle, which will remove this
+  error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@vitejs/plugin-react"
+
+    vite.config.ts:2:18:
+      2 │ import react from "@vitejs/plugin-react";
+        ╵                   ~~~~~~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@vitejs/plugin-react" as external to exclude it from the bundle, which will
+  remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@replit/vite-plugin-runtime-error-modal"
+
+    vite.config.ts:4:32:
+      4 │ import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
+        ╵                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@replit/vite-plugin-runtime-error-modal" as external to exclude it from the
+  bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@replit/vite-plugin-cartographer"
+
+    vite.config.ts:13:23:
+      13 │           await import("@replit/vite-plugin-cartographer").then((m) =>
+         ╵                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@replit/vite-plugin-cartographer" as external to exclude it from the
+  bundle, which will remove this error and leave the unresolved path in the bundle. You can also add
+  ".catch()" here to handle this failure at run-time instead of bundle-time.
+
+▲ [WARNING] Duplicate member "getGameFromEgg" in class body [duplicate-class-member]
+
+    server/wisp-integration.ts:497:10:
+      497 │   private getGameFromEgg(egg: number, nest: number, environment: any): string {
+          ╵           ~~~~~~~~~~~~~~
+
+  The original member "getGameFromEgg" is here:
+
+    server/wisp-integration.ts:148:10:
+      148 │   private getGameFromEgg(eggId: number): string {
+          ╵           ~~~~~~~~~~~~~~
+
+1 of 6 warnings and all 5 errors shown (disable the message limit with --log-limit=0)
+❌ Build failed
+ubuntu@ns1011058:~/voltservers$ cd /home/ubuntu/voltservers
+./complete-production-fix.sh
+🔧 Complete Production Fix for VoltServers
+==========================================
+Environment configuration:
+NODE_ENV=production
+DATABASE_URL=postgresql://voltservers:A2pplesyum!@localhost:5432/voltservers
+PORT=5000
+SESSION_SECRET=voltservers-production-final
+DROP DATABASE
+CREATE DATABASE
+DROP ROLE
+CREATE ROLE
+GRANT
+                                                               version
+--------------------------------------------------------------------------------------------------------------------------------------
+ PostgreSQL 16.9 (Ubuntu 16.9-0ubuntu0.24.04.1) on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0, 64-bit
+(1 row)
+
+Cleaning and rebuilding application...
+
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+sh: 1: vite: not found
+Building backend server...
+✘ [ERROR] Could not resolve "vite"
+
+    server/vite.ts:4:63:
+      4 │ import { createServer as createViteServer, createLogger } from "vite";
+        │                                                                ~~~~~~
+        ╵                                                                "./vite"
+
+  Use the relative path "./vite" to reference the file "server/vite.ts". Without the leading "./",
+  the path "vite" is being interpreted as a package path instead.
+
+✘ [ERROR] Could not resolve "vite"
+
+    vite.config.ts:1:29:
+      1 │ import { defineConfig } from "vite";
+        ╵                              ~~~~~~
+
+  You can mark the path "vite" as external to exclude it from the bundle, which will remove this
+  error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@vitejs/plugin-react"
+
+    vite.config.ts:2:18:
+      2 │ import react from "@vitejs/plugin-react";
+        ╵                   ~~~~~~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@vitejs/plugin-react" as external to exclude it from the bundle, which will
+  remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@replit/vite-plugin-runtime-error-modal"
+
+    vite.config.ts:4:32:
+      4 │ import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
+        ╵                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@replit/vite-plugin-runtime-error-modal" as external to exclude it from the
+  bundle, which will remove this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "@replit/vite-plugin-cartographer"
+
+    vite.config.ts:13:23:
+      13 │           await import("@replit/vite-plugin-cartographer").then((m) =>
+         ╵                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  You can mark the path "@replit/vite-plugin-cartographer" as external to exclude it from the
+  bundle, which will remove this error and leave the unresolved path in the bundle. You can also add
+  ".catch()" here to handle this failure at run-time instead of bundle-time.
+
+▲ [WARNING] Duplicate member "getGameFromEgg" in class body [duplicate-class-member]
+
+    server/wisp-integration.ts:497:10:
+      497 │   private getGameFromEgg(egg: number, nest: number, environment: any): string {
+          ╵           ~~~~~~~~~~~~~~
+
+  The original member "getGameFromEgg" is here:
+
+    server/wisp-integration.ts:148:10:
+      148 │   private getGameFromEgg(eggId: number): string {
+          ╵           ~~~~~~~~~~~~~~
+
+1 of 6 warnings and all 5 errors shown (disable the message limit with --log-limit=0)
+❌ Build failed

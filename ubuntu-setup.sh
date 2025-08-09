@@ -97,6 +97,11 @@ npm run db:push
 
 # Configure Nginx
 echo "🌐 Configuring Nginx reverse proxy..."
+
+# First, add rate limiting to nginx.conf
+sudo sed -i '/http {/a\\n    # Rate limiting\n    limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;\n' /etc/nginx/nginx.conf
+
+# Create site configuration
 sudo tee /etc/nginx/sites-available/voltservers > /dev/null << 'EOL'
 server {
     listen 80;
@@ -113,9 +118,6 @@ server {
     gzip_vary on;
     gzip_min_length 1024;
     gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json;
-    
-    # Rate limiting
-    limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;
     
     location / {
         proxy_pass http://localhost:5000;

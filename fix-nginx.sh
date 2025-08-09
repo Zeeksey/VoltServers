@@ -1,123 +1,89 @@
 #!/bin/bash
 
-# Nginx Fix Script for VoltServers Deployment
-# Run this if Nginx fails during deployment
+# Fix Nginx configuration for VoltServers
+echo "🔧 Fixing Nginx configuration..."
 
-set -e
+# Remove the problematic site if it exists
+sudo rm -f /etc/nginx/sites-enabled/voltservers
+sudo rm -f /etc/nginx/sites-available/voltservers
 
-echo "🔧 Fixing Nginx Configuration Issues"
-echo "==================================="
-
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m'
-
-print_status() { echo -e "\033[0;34m[INFO]\033[0m $1"; }
-print_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
-print_error() { echo -e "${RED}[ERROR]${NC} $1"; }
-print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
-
-# Stop nginx first
-print_status "Stopping nginx..."
-sudo systemctl stop nginx 2>/dev/null || true
-
-# Remove conflicting configurations
-print_status "Cleaning up nginx configurations..."
-sudo rm -f /etc/nginx/sites-enabled/*
-sudo rm -f /etc/nginx/sites-available/default
-
-# Check if port 80 is in use
-print_status "Checking for port conflicts..."
-if netstat -tlnp | grep -q ":80 "; then
-    print_warning "Port 80 is in use by another process:"
-    netstat -tlnp | grep ":80 "
-    
-    # Move Apache to port 8080 instead of stopping it (preserve phpMyAdmin)
-    if sudo systemctl is-active --quiet apache2 2>/dev/null; then
-        print_status "Moving Apache/phpMyAdmin to port 8080..."
-        
-        # Update Apache configuration
-        sudo sed -i 's/Listen 80/Listen 8080/' /etc/apache2/ports.conf 2>/dev/null || true
-        sudo sed -i 's/<VirtualHost \*:80>/<VirtualHost *:8080>/' /etc/apache2/sites-available/000-default.conf 2>/dev/null || true
-        
-        # Restart Apache on new port
-        sudo systemctl restart apache2
-        
-        print_success "Apache moved to port 8080 - phpMyAdmin now at http://135.148.137.158:8080/phpmyadmin"
-    fi
+# Add rate limiting to nginx.conf if not already present
+if ! grep -q "limit_req_zone" /etc/nginx/nginx.conf; then
+    echo "📝 Adding rate limiting to nginx.conf..."
+    sudo sed -i '/http {/a\\n    # Rate limiting for VoltServers\n    limit_req_zone $binary_remote_addr zone=api:10m rate=10r/s;\n' /etc/nginx/nginx.conf
 fi
 
-# Create minimal working nginx config
-print_status "Creating minimal nginx configuration..."
-sudo tee /etc/nginx/sites-available/voltservers > /dev/null << 'EOF'
+# Create corrected site configuration
+echo "📋 Creating site configuration..."
+sudo tee /etc/nginx/sites-available/voltservers > /dev/null << 'EOL'
 server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
+    listen 80;
     server_name _;
     
+    # Security headers
+    add_header X-Frame-Options DENY;
+    add_header X-Content-Type-Options nosniff;
+    add_header X-XSS-Protection "1; mode=block";
+    add_header Referrer-Policy strict-origin-when-cross-origin;
+    
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json;
+    
     location / {
-        proxy_pass http://127.0.0.1:5000;
+        proxy_pass http://localhost:5000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 86400;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+    }
+    
+    # API rate limiting
+    location /api/ {
+        limit_req zone=api burst=20 nodelay;
+        proxy_pass http://localhost:5000;
+        proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
+    
+    # Static assets with caching
+    location /assets {
+        proxy_pass http://localhost:5000;
+        proxy_cache_valid 200 1y;
+        add_header Cache-Control "public, immutable";
+    }
 }
-EOF
+EOL
 
 # Enable the site
+echo "🔗 Enabling site..."
 sudo ln -sf /etc/nginx/sites-available/voltservers /etc/nginx/sites-enabled/
+sudo rm -f /etc/nginx/sites-enabled/default
 
 # Test configuration
-print_status "Testing nginx configuration..."
-if sudo nginx -t; then
-    print_success "Nginx configuration is valid"
+echo "🧪 Testing Nginx configuration..."
+sudo nginx -t
+
+if [ $? -eq 0 ]; then
+    echo "✅ Nginx configuration is valid"
+    echo "🔄 Restarting Nginx..."
+    sudo systemctl restart nginx
+    echo "✅ Nginx restarted successfully"
 else
-    print_error "Nginx configuration still invalid:"
-    sudo nginx -t
+    echo "❌ Nginx configuration test failed"
     exit 1
 fi
 
-# Start nginx
-print_status "Starting nginx..."
-if sudo systemctl start nginx; then
-    print_success "Nginx started successfully"
-    sudo systemctl enable nginx
-else
-    print_error "Failed to start nginx"
-    print_status "Checking nginx status..."
-    sudo systemctl status nginx --no-pager
-    print_status "Checking nginx logs..."
-    sudo journalctl -u nginx --no-pager -l
-    exit 1
-fi
-
-# Verify nginx is running and accessible
-print_status "Verifying nginx is working..."
-sleep 2
-
-if curl -f -s http://localhost > /dev/null; then
-    print_success "Nginx is working and proxying requests"
-else
-    print_warning "Nginx is running but may not be proxying correctly"
-    print_status "Checking if your application is running on port 5000..."
-    
-    if curl -f -s http://localhost:5000 > /dev/null; then
-        print_warning "App is running on port 5000 but nginx proxy may have issues"
-    else
-        print_warning "App is not running on port 5000 - start it with: pm2 start ecosystem.config.js --env production"
-    fi
-fi
-
-print_status "Nginx status:"
-sudo systemctl status nginx --no-pager -l
-
-echo ""
-print_success "Nginx fix completed!"
-echo ""
-echo "Next steps:"
-echo "1. Ensure your VoltServers app is running: pm2 status"
-echo "2. Test the site: curl http://localhost"
-echo "3. Check external access: curl http://135.148.137.158"
+echo "🎉 Nginx configuration fixed!"

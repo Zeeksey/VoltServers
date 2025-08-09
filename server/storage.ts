@@ -44,7 +44,7 @@ import {
   type GameFeature,
   type InsertGameFeature,
   incidents,
-  type InsertIncidentSchema,
+  type InsertIncident,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { DatabaseStorage } from "./database-storage";
@@ -213,6 +213,20 @@ export interface IStorage {
   getMinecraftLogs(serverId: string, limit?: number): Promise<MinecraftLog[]>;
   createMinecraftLog(log: InsertMinecraftLog): Promise<MinecraftLog>;
   deleteOldMinecraftLogs(serverId: string, olderThanDays: number): Promise<void>;
+  
+  // Incidents methods
+  getAllIncidents(): Promise<Incident[]>;
+  getIncident(id: string): Promise<Incident | undefined>;
+  createIncident(incident: InsertIncident): Promise<Incident>;
+  updateIncident(id: string, updates: Partial<Incident>): Promise<Incident>;
+  deleteIncident(id: string): Promise<void>;
+  
+  // Newsletter subscriptions methods
+  getAllNewsletterSubscriptions(): Promise<NewsletterSubscription[]>;
+  getNewsletterSubscription(id: string): Promise<NewsletterSubscription | undefined>;
+  getNewsletterSubscriptionByEmail(email: string): Promise<NewsletterSubscription | undefined>;
+  createNewsletterSubscription(subscription: InsertNewsletterSubscription): Promise<NewsletterSubscription>;
+  deleteNewsletterSubscription(id: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -238,6 +252,10 @@ export class MemStorage implements IStorage {
   // Admin settings storage
   private promoSettings: PromoSetting | null = null;
   private themeSettings: any = null;
+  
+  // Additional storage maps
+  private incidents: Map<string, Incident>;
+  private newsletterSubscriptions: Map<string, NewsletterSubscription>;
 
   constructor() {
     this.users = new Map();
@@ -258,6 +276,10 @@ export class MemStorage implements IStorage {
     this.minecraftPlayers = new Map();
     this.minecraftBackups = new Map();
     this.minecraftLogs = new Map();
+    
+    // Initialize additional maps
+    this.incidents = new Map();
+    this.newsletterSubscriptions = new Map();
     
     this.initializeData();
     this.initializeMinecraftData();
@@ -2114,6 +2136,69 @@ DDoS protection requires a comprehensive approach combining network architecture
   async updateThemeSettings(settings: any): Promise<any> {
     this.themeSettings = { ...this.themeSettings, ...settings };
     return this.themeSettings;
+  }
+
+  // Incidents methods
+  async getAllIncidents(): Promise<Incident[]> {
+    return Array.from(this.incidents.values());
+  }
+
+  async getIncident(id: string): Promise<Incident | undefined> {
+    return this.incidents.get(id);
+  }
+
+  async createIncident(insertIncident: InsertIncident): Promise<Incident> {
+    const id = randomUUID();
+    const incident: Incident = {
+      ...insertIncident,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.incidents.set(id, incident);
+    return incident;
+  }
+
+  async updateIncident(id: string, updates: Partial<Incident>): Promise<Incident> {
+    const existing = this.incidents.get(id);
+    if (!existing) {
+      throw new Error(`Incident with id ${id} not found`);
+    }
+    const updated = { ...existing, ...updates, updatedAt: new Date() };
+    this.incidents.set(id, updated);
+    return updated;
+  }
+
+  async deleteIncident(id: string): Promise<void> {
+    this.incidents.delete(id);
+  }
+
+  // Newsletter subscriptions methods
+  async getAllNewsletterSubscriptions(): Promise<NewsletterSubscription[]> {
+    return Array.from(this.newsletterSubscriptions.values());
+  }
+
+  async getNewsletterSubscription(id: string): Promise<NewsletterSubscription | undefined> {
+    return this.newsletterSubscriptions.get(id);
+  }
+
+  async getNewsletterSubscriptionByEmail(email: string): Promise<NewsletterSubscription | undefined> {
+    return Array.from(this.newsletterSubscriptions.values()).find(sub => sub.email === email);
+  }
+
+  async createNewsletterSubscription(insertSubscription: InsertNewsletterSubscription): Promise<NewsletterSubscription> {
+    const id = randomUUID();
+    const subscription: NewsletterSubscription = {
+      ...insertSubscription,
+      id,
+      subscribedAt: new Date(),
+    };
+    this.newsletterSubscriptions.set(id, subscription);
+    return subscription;
+  }
+
+  async deleteNewsletterSubscription(id: string): Promise<void> {
+    this.newsletterSubscriptions.delete(id);
   }
 }
 

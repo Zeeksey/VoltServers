@@ -662,3 +662,7 @@ export type GamePricingTier = typeof gamePricingTiers.$inferSelect;
 
 export type InsertGameFeature = z.infer<typeof insertGameFeatureSchema>;
 export type GameFeature = typeof gameFeatures.$inferSelect;
+
+// Types for newsletter subscriptions
+export type InsertNewsletterSubscription = z.infer<typeof insertNewsletterSubscriptionSchema>;
+export type NewsletterSubscription = typeof newsletterSubscriptions.$inferSelect;

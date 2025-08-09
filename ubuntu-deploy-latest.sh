@@ -225,6 +225,7 @@ module.exports = {
     watch: false,
     max_memory_restart: '1G',
     restart_delay: 4000,
+    env_file: '.env',
     env: {
       NODE_ENV: 'development'
     },

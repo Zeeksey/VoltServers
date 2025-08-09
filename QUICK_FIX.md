@@ -20,7 +20,7 @@ If you encounter the PM2 configuration error during deployment, run this simple 
 
 3. **Manual fix - create correct PM2 config:**
    ```bash
-   cat > ecosystem.config.js << 'EOF'
+   cat > ecosystem.config.cjs << 'EOF'
    module.exports = {
      apps: [{
        name: 'voltservers',
@@ -49,7 +49,7 @@ If you encounter the PM2 configuration error during deployment, run this simple 
 4. **Start the application:**
    ```bash
    mkdir -p logs
-   pm2 start ecosystem.config.js --env production
+   pm2 start ecosystem.config.cjs --env production
    pm2 save
    ```
 

@@ -1,6 +1,3 @@
-// Use ecosystem.config.cjs for production deployment
-// This file is kept for development reference
-
 module.exports = {
   apps: [{
     name: 'voltservers',

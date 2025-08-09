@@ -214,32 +214,29 @@ EOF
     
     # Create PM2 ecosystem file
     print_status "Creating PM2 configuration..."
-    cat > ecosystem.config.js << 'EOF'
+    cat > ecosystem.config.cjs << 'EOF'
 module.exports = {
   apps: [{
     name: 'voltservers',
     script: './dist/index.js',
-    instances: 'max',
-    exec_mode: 'cluster',
+    instances: 1,
+    exec_mode: 'fork',
+    autorestart: true,
+    watch: false,
+    max_memory_restart: '1G',
+    restart_delay: 4000,
     env: {
       NODE_ENV: 'development'
     },
     env_production: {
-      NODE_ENV: 'production',
-      PORT: 5000
+      NODE_ENV: 'production'
     },
     error_file: './logs/err.log',
     out_file: './logs/out.log',
     log_file: './logs/combined.log',
-    time: true,
-    max_memory_restart: '1G',
-    restart_delay: 4000,
-    watch: false,
-    ignore_watch: ['node_modules', 'logs', '.git'],
-    max_restarts: 10,
-    min_uptime: '10s'
+    time: true
   }]
-}
+};
 EOF
     
     # Create logs directory
@@ -270,7 +267,7 @@ start_application() {
     pm2 delete all 2>/dev/null || true
     
     # Start application
-    pm2 start ecosystem.config.js --env production
+    pm2 start ecosystem.config.cjs --env production
     pm2 save
     
     # Setup PM2 startup
@@ -536,7 +533,7 @@ show_final_status() {
     echo "Important Files:"
     echo "  App directory:    $APP_DIR"
     echo "  Environment:      $APP_DIR/.env"
-    echo "  PM2 config:       $APP_DIR/ecosystem.config.js"
+    echo "  PM2 config:       $APP_DIR/ecosystem.config.cjs"
     echo "  Nginx config:     /etc/nginx/sites-available/voltservers"
     echo "  Backup scripts:   ~/backup-voltservers.sh"
     echo ""

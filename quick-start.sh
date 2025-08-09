@@ -1,35 +1,37 @@
 #!/bin/bash
 
-# Quick start VoltServers if already deployed but not running
+# Quick start script for Ubuntu VoltServers deployment
+# This script can be run with: curl -sSL https://raw.githubusercontent.com/Zeeksey/voltservers2/main/quick-start.sh | bash
 
-echo "🚀 Quick Starting VoltServers"
-echo "============================="
+echo "🚀 VoltServers Quick Deployment"
+echo "==============================="
 
-cd /home/ubuntu/voltservers || exit 1
-
-# Stop existing processes
-pm2 delete voltservers 2>/dev/null || true
-
-# Build if needed
-if [[ ! -f "dist/index.js" ]]; then
-    echo "Building application..."
-    npm run build
+# Check if running as root
+if [ "$EUID" -eq 0 ]; then
+    echo "⚠️  Please don't run this script as root. Run as ubuntu user:"
+    echo "   sudo su - ubuntu"
+    echo "   ./ubuntu-setup.sh"
+    exit 1
 fi
 
-# Start with simple PM2 command
-echo "Starting VoltServers..."
-pm2 start dist/index.js --name voltservers --env NODE_ENV=production --env PORT=5000
+# Check Ubuntu version
+if ! grep -q "Ubuntu" /etc/os-release; then
+    echo "❌ This script is designed for Ubuntu. Detected: $(cat /etc/os-release | grep PRETTY_NAME)"
+    exit 1
+fi
 
-# Save PM2 config
-pm2 save
+echo "✅ Running on Ubuntu as user: $(whoami)"
+echo "✅ Server IP: $(curl -s ifconfig.me 2>/dev/null || echo 'Unable to detect')"
 
-# Test
-sleep 3
-if curl -f -s http://localhost:5000 > /dev/null; then
-    echo "✅ VoltServers running on port 5000"
+# Download and run the setup script
+if [ -f "ubuntu-setup.sh" ]; then
+    echo "📋 Found ubuntu-setup.sh, running deployment..."
+    chmod +x ubuntu-setup.sh
+    ./ubuntu-setup.sh
 else
-    echo "❌ VoltServers not responding"
-    pm2 logs voltservers --lines 5
+    echo "📥 Downloading ubuntu-setup.sh..."
+    curl -sSL -o ubuntu-setup.sh https://raw.githubusercontent.com/Zeeksey/voltservers2/main/ubuntu-setup.sh
+    chmod +x ubuntu-setup.sh
+    echo "🚀 Starting deployment..."
+    ./ubuntu-setup.sh
 fi
-
-pm2 status
